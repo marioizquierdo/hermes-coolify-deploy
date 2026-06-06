@@ -1,6 +1,3 @@
-# Hermes version to install
-ARG HERMES_VERSION=0.15.2
-
 FROM python:3.11-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
@@ -38,6 +35,7 @@ RUN cd scripts/whatsapp-bridge && \
     npm install
 
 # Install Hermes Agent globally from PyPI
+ARG HERMES_VERSION=0.15.2
 RUN pip install hermes-agent[all]==${HERMES_VERSION}
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
