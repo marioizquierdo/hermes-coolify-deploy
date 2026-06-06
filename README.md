@@ -1,15 +1,76 @@
-# Hermes Coolify Deploy
+# Hermes Coolify Deployment
 
-A generic Infrastructure-as-Code (IaC) template to deploy the [Hermes Agent](https://github.com/NousResearch/hermes-agent) on a Hetzner VPS using Coolify.
+This repository provides a configuration-only template for deploying a Hermes AI Agent on [Coolify](https://coolify.io/). It utilizes a single-stage Dockerfile that installs **hermes-agent** via pip; this approach replaces complex build processes with a streamlined environment setup.
 
-## Architecture
-This repository utilizes a configuration-only deployment model:
-* **Application Logic:** Pulled directly from PyPI (`hermes-agent[all]`) and official upstream repositories via sparse checkout.
-* **State Management:** All persistent data (memories, configurations, API keys) must be managed via Coolify volumes mounted to `/root/.hermes`.
+## Infrastructure Requirements
 
-## Deployment via Coolify
-1. Create a new project in Coolify.
-2. Connect this repository using the standard **Dockerfile** build pack.
-3. Configure the required environment variables (e.g., `WHATSAPP_ENABLED`).
-4. Mount a persistent volume to the `/root/.hermes` destination path.
-5. Deploy.
+This guide focuses on [Hetzner](https://www.hetzner.com/) cloud instance (specifically a CPX21 instance) as the reference deployment environment. However, the server infrastructure is flexible; Coolify and this Dockerfile are compatible with AWS, DigitalOcean, or any other modern VPS provider.
+
+### Optional: Swap Memory Configuration
+
+Allocating 2GB of swap memory is optional but highly recommended; it helps prevent out-of-memory crashes during the Docker build process.
+
+1. SSH into your server.
+2. Execute the following commands to create and enable a swap file:
+   ```bash
+   fallocate -l 2G /swapfile
+   chmod 600 /swapfile
+   mkswap /swapfile
+   swapon /swapfile
+   echo '/swapfile none swap sw 0 0' >> /etc/fstab
+   ```
+
+## Server Preparation and Coolify Installation
+
+Install Coolify on your fresh VPS. For comprehensive setup details, refer to the [official Coolify installation documentation](https://coolify.io/docs/).
+
+1. Execute the installation script:
+   ```bash
+   curl -fsSL [https://cdn.coollabs.io/coolify/install.sh](https://cdn.coollabs.io/coolify/install.sh) | bash
+   ```
+2. Access the Coolify dashboard and create a new project.
+3. Connect this repository (`https://github.com/marioizquierdo/hermes-coolify-deploy`) and select the Docker-based deployment method.
+
+## Persistent Storage Configuration
+
+Hermes requires persistent storage to maintain identity and session state across container rebuilds.
+1. Navigate to the Storage section of your Coolify project.
+2. Add a new volume mount mapping the host volume to the container path `/root/.hermes`.
+3. Ensure the container process has write permissions for this directory.
+
+## Environment Variables
+
+Navigate to the Environment Variables configuration in Coolify. Define the minimal variables necessary to start the container and enable the web dashboard. Below is an example subset for initial configuration:
+
+```env
+HERMES_DASHBOARD=1
+HERMES_DASHBOARD_TUI=1
+ANTHROPIC_API_KEY=sk-xxx
+WHATSAPP_ENABLED=true
+WHATSAPP_MODE=bot
+TZ=America/Los_Angeles
+```
+
+## Web UI, Telegram, and WhatsApp Configuration
+
+Hermes can interface through multiple bridge platforms, including Telegram and WhatsApp, and it can also be accessed directly via its built-in Web UI.
+
+To verify the deployment, access the Coolify terminal for your container and type a simple "hello world" message; this confirms the basic agent loop is functioning.
+
+If utilizing WhatsApp:
+1. Monitor the container deployment logs within the Coolify dashboard.
+2. Once initialized, a QR code will be rendered in the logs.
+3. Scan the QR code using the Linked Devices feature in your mobile WhatsApp application.
+
+## Agent Initialization and Context
+
+It is beneficial to inform Hermes about its operating environment to assist with self-improvement and debugging. You can provide this context via the dashboard or a messaging interface.
+
+Send the following prompt to initialize its spatial awareness:
+> "Remember that you are running within a Docker container orchestrated by Coolify on a Hetzner VPS. Your persistent storage is mounted at `/root/.hermes`. You have write permissions to this directory; use it to store persistent configuration and memory".
+
+## Memory and Advanced Features
+
+Hermes manages core context through basic text files. Use `USER.md` to define user preferences and `MEMORY.md` for long-term agent recall. For enhanced capabilities, it is recommended to install the `holographic` extension.
+
+Advanced deployment orchestration utilizing `honcho` is supported by the ecosystem; however, this configuration should be deferred until the core agent loop and memory systems are verified and stable.
