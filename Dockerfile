@@ -38,6 +38,9 @@ RUN cd scripts/whatsapp-bridge && \
 ARG HERMES_VERSION=0.15.2
 RUN pip install hermes-agent[all]==${HERMES_VERSION}
 
+# Transfer the built Node.js bridge to the global Python site-packages directory
+RUN cp -R /app/scripts /usr/local/lib/python3.11/site-packages/
+
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Start the gateway (which serves both the API and the built web UI)
