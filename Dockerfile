@@ -1,3 +1,6 @@
+# Hermes version to install
+ARG HERMES_VERSION=0.15.2
+
 FROM python:3.11-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
@@ -35,9 +38,9 @@ RUN cd scripts/whatsapp-bridge && \
     npm install
 
 # Install Hermes Agent globally from PyPI
-RUN pip install hermes-agent[all]==0.15.2
+RUN pip install hermes-agent[all]==${HERMES_VERSION}
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# Start the dashboard and gateway
-CMD ["bash", "-c", "npm run start --prefix web & hermes gateway run"]
+# Start the gateway (which serves both the API and the built web UI)
+CMD ["hermes", "gateway", "run"]
