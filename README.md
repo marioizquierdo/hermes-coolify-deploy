@@ -4,7 +4,7 @@ This repository provides a configuration-only template for deploying a Hermes AI
 
 ## Infrastructure Requirements
 
-This guide focuses on [Hetzner](https://www.hetzner.com/) cloud instance (specifically a CPX21 instance) as the reference deployment environment. However, the server infrastructure is flexible; Coolify and this Dockerfile are compatible with AWS, DigitalOcean, or any other modern VPS provider.
+This guide focuses on a [Hetzner](https://www.hetzner.com/) cloud instance (specifically a CPX21 instance) as the reference deployment environment. However, the server infrastructure is flexible; Coolify and this Dockerfile are compatible with AWS, DigitalOcean, or any other modern VPS provider.
 
 ### Optional: Swap Memory Configuration
 
@@ -34,11 +34,12 @@ Install Coolify on your fresh VPS. For comprehensive setup details, refer to the
 ## Persistent Storage Configuration
 
 Hermes requires persistent storage to maintain identity and session state across container rebuilds.
+
 1. Navigate to the Storage section of your Coolify project.
 2. Add a new volume mount mapping the host volume to the container path `/root/.hermes`.
 3. Ensure the container process has write permissions for this directory.
 
-## Environment Variables
+## Environment Variables and Network Configuration
 
 Navigate to the Environment Variables configuration in Coolify. Define the minimal variables necessary to start the container and enable the web dashboard. Below is an example subset for initial configuration:
 
@@ -46,21 +47,28 @@ Navigate to the Environment Variables configuration in Coolify. Define the minim
 HERMES_DASHBOARD=1
 HERMES_DASHBOARD_TUI=1
 ANTHROPIC_API_KEY=sk-xxx
+OPENROUTER_API_KEY=sk-or-v1-xxx
 WHATSAPP_ENABLED=true
 WHATSAPP_MODE=bot
 TZ=America/Los_Angeles
 ```
 
-## Web UI, Telegram, and WhatsApp Configuration
+**Critical Port Configuration**: By default, Coolify isolates containers. To access the web dashboard, navigate to the "Configuration -> General" tab of your resource in Coolify and set the "Ports Exposes" field to `3000`.
 
-Hermes can interface through multiple bridge platforms, including Telegram and WhatsApp, and it can also be accessed directly via its built-in Web UI.
+## Agent Initialization and WhatsApp Pairing
 
-To verify the deployment, access the Coolify terminal for your container and type a simple "hello world" message; this confirms the basic agent loop is functioning.
+**Important**: Do not connect WhatsApp immediately. The default model string in Hermes v0.15.2 might trigger a 404 error with Anthropic API requirements. You must set your model configuration first.
+
+1. Open the Coolify Terminal for your container.
+2. Run the interactive chat CLI by typing `hermes chat`.
+3. Type the `/model` command and follow the prompts to select your desired provider and model (for example, OpenRouter and `anthropic/claude-3.5-sonnet`, or Anthropic and `claude-3-5-sonnet-20241022`).
+4. Type a simple "hello world" message to confirm the basic agent loop is functioning.
+5. Type `/exit` to close the interface, then restart the Coolify container from the dashboard so the background gateway picks up the new model state.
 
 If utilizing WhatsApp:
-1. Monitor the container deployment logs within the Coolify dashboard.
-2. Once initialized, a QR code will be rendered in the logs.
-3. Scan the QR code using the Linked Devices feature in your mobile WhatsApp application.
+1. Open the Coolify Terminal.
+2. Run the pairing command: `hermes whatsapp --pair`
+3. A QR code will render in the terminal. Scan this QR code using the Linked Devices feature in your mobile WhatsApp application.
 
 ## Agent Initialization and Context
 
