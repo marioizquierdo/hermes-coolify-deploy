@@ -2,8 +2,7 @@ FROM python:3.11-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PORT=3000
+    PIP_NO_CACHE_DIR=1
 
 # Install system dependencies and Node.js
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -43,5 +42,5 @@ RUN cp -R /app/scripts /usr/local/lib/python3.11/site-packages/
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# Start the gateway (which serves both the API and the built web UI)
-CMD ["hermes", "gateway", "run"]
+# Start the gateway in the background, then start the dashboard in the foreground
+CMD sh -c "hermes gateway run & sleep 2 && hermes dashboard --host 0.0.0.0 --port 3000 --no-open --insecure"
