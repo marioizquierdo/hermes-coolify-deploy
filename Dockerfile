@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     tini \
     build-essential \
+    nano \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean \
@@ -43,4 +44,4 @@ RUN cp -R /app/scripts /usr/local/lib/python3.11/site-packages/
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Start the gateway in the background, then start the dashboard in the foreground
-CMD sh -c "hermes gateway run & sleep 2 && hermes dashboard --host 0.0.0.0 --port 3000 --no-open --insecure"
+CMD sh -c "PORT=8642 hermes gateway run & sleep 2 && hermes dashboard --host 0.0.0.0 --port 3000 --no-open --insecure"
