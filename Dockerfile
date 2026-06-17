@@ -36,12 +36,17 @@ RUN cd scripts/whatsapp-bridge && \
 
 # Install Hermes Agent globally from PyPI
 ARG HERMES_VERSION=0.15.2
-RUN pip install hermes-agent[all]==${HERMES_VERSION}
+RUN pip install hermes-agent[all]==${HERMES_VERSION} honcho
 
 # Transfer the built Node.js bridge to the global Python site-packages directory
 RUN cp -R /app/scripts /usr/local/lib/python3.11/site-packages/
 
+# Generate a Procfile that explicitly isolates the PORT variable for each task
+RUN echo 'gateway: PORT=8642 hermes gateway run' > /root/Procfile && \
+    echo 'dashboard: PORT=3000 hermes dashboard --host 0.0.0.0 --port 3000 --no-open --insecure' >> /root/Procfile
+
+WORKDIR /root
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# Start the gateway in the background, then start the dashboard in the foreground
-CMD sh -c "PORT=8642 hermes gateway run & sleep 2 && hermes dashboard --host 0.0.0.0 --port 3000 --no-open --insecure"
+# Start the gateway and dashboard with honcho
+CMD ["honcho", "start"]
