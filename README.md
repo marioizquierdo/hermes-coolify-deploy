@@ -64,7 +64,7 @@ Open your Coolify Terminal for the Hermes container to run hermes commands. For 
 hermes config set ANTHROPIC_API_KEY sk-xxx
 ```
 
-Then configure the model on `~/.hermes/.env`:
+Then configure the default model (this writes to `~/.hermes/config.yaml`):
 
 ```
 hermes config set model.provider anthropic
@@ -82,7 +82,7 @@ After configuring, restart the Coolify container from the dashboard so the backg
 ## WhatsApp Pairing
 
 1. Open the Coolify Terminal.
-2. Run the pairing command: `hermes whatsapp --pair`
+2. Run the pairing command: `hermes whatsapp`. Alternatively, open the Hermes Web Dashboard, go to the Channels tab, and click the Pair button to scan the QR code directly on the browser.
 3. A QR code will render in the terminal. Scan this QR code using the Linked Devices feature in your mobile WhatsApp application.
 
 ## Agent Initialization and Context
@@ -95,5 +95,3 @@ Send the following prompt to initialize its spatial awareness:
 ## Memory and Advanced Features
 
 Hermes manages core context through basic text files. Use `USER.md` to define user preferences and `MEMORY.md` for long-term agent recall. For enhanced capabilities, it is recommended to install the `holographic` extension.
-
-Advanced deployment orchestration utilizing `honcho` is supported by the ecosystem; however, this configuration should be deferred until the core agent loop and memory systems are verified and stable.
