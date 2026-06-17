@@ -10,17 +10,17 @@ This guide focuses on a [Hetzner](https://www.hetzner.com/) cloud instance (spec
 
 Allocating 2GB of swap memory is optional but highly recommended; it helps prevent out-of-memory crashes during the Docker build process.
 
-1. SSH into your server.
-2. Execute the following commands to create and enable a swap file:
-   ```bash
-   fallocate -l 2G /swapfile
-   chmod 600 /swapfile
-   mkswap /swapfile
-   swapon /swapfile
-   echo '/swapfile none swap sw 0 0' >> /etc/fstab
-   ```
+SSH into your server and run the following commands to create and enable a swap file:
 
-## Server Preparation and Coolify Installation
+```bash
+fallocate -l 2G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+```
+
+## Install Coolify
 
 Install Coolify on your fresh VPS. For comprehensive setup details, refer to the [official Coolify installation documentation](https://coolify.io/docs/).
 
@@ -29,7 +29,8 @@ Install Coolify on your fresh VPS. For comprehensive setup details, refer to the
    curl -fsSL [https://cdn.coollabs.io/coolify/install.sh](https://cdn.coollabs.io/coolify/install.sh) | bash
    ```
 2. Access the Coolify dashboard and create a new project.
-3. Connect this repository (`https://github.com/marioizquierdo/hermes-coolify-deploy`) and select the Docker-based deployment method.
+3. Configuration > Git Source > add `/marioizquierdo/hermes-coolify-deploy` (this repository)
+4. Configuration > General > Build Pack = Docker
 
 ## Persistent Storage Configuration
 
@@ -46,26 +47,40 @@ Navigate to the Environment Variables configuration in Coolify. Define the minim
 ```env
 HERMES_DASHBOARD=1
 HERMES_DASHBOARD_TUI=1
-ANTHROPIC_API_KEY=sk-xxx
-OPENROUTER_API_KEY=sk-or-v1-xxx
 WHATSAPP_ENABLED=true
 WHATSAPP_MODE=bot
 TZ=America/Los_Angeles
 ```
 
-**Critical Port Configuration**: By default, Coolify isolates containers. To access the web dashboard, navigate to the "Configuration -> General" tab of your resource in Coolify and set the "Ports Exposes" field to `3000`.
+**Critical Port Configuration**: By default, Coolify isolates containers. To access the web dashboard, navigate to the "Configuration -> General" tab of your resource in Coolify and set the "Ports Exposes" field to `3005` (use same value as in the Dockerfile dashboard process).
 
-## Agent Initialization and WhatsApp Pairing
+## Agent Model Initialization
 
-**Important**: Do not connect WhatsApp immediately. The default model string in Hermes v0.15.2 might trigger a 404 error with Anthropic API requirements. You must set your model configuration first.
+The agent needs a model. Get an API Key from a model provider and add it to the `~/.hermes/.env` file.
 
-1. Open the Coolify Terminal for your container.
-2. Run the interactive chat CLI by typing `hermes chat`.
-3. Type the `/model` command and follow the prompts to select your desired provider and model (for example, OpenRouter and `anthropic/claude-3.5-sonnet`, or Anthropic and `claude-3-5-sonnet-20241022`).
-4. Type a simple "hello world" message to confirm the basic agent loop is functioning.
-5. Type `/exit` to close the interface, then restart the Coolify container from the dashboard so the background gateway picks up the new model state.
+Open your Coolify Terminal for the Hermes container to run hermes commands. For example, if you have a Claude/Anthropic API Key:
 
-If utilizing WhatsApp:
+```
+hermes config set ANTHROPIC_API_KEY sk-xxx
+```
+
+Then configure the model on `~/.hermes/.env`:
+
+```
+hermes config set model.provider anthropic
+hermes config set model.default claude-3-5-sonnet-20241022
+```
+
+Alternatively, you can enable the model through the hermes chat:
+
+1. Run the interactive chat CLI by typing `hermes chat`.
+2. Type the `/model` command and follow the prompts to select your desired provider and model (for example, OpenRouter and `anthropic/claude-3.5-sonnet`, or Anthropic and `claude-3-5-sonnet-20241022`).
+3. Type a simple "hello world" message to confirm the basic agent loop is functioning. Then `/exit` to end the session.
+
+After configuring, restart the Coolify container from the dashboard so the background gateway picks up the new model state.
+
+## WhatsApp Pairing
+
 1. Open the Coolify Terminal.
 2. Run the pairing command: `hermes whatsapp --pair`
 3. A QR code will render in the terminal. Scan this QR code using the Linked Devices feature in your mobile WhatsApp application.
