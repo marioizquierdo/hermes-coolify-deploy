@@ -5,7 +5,8 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
 # Install system dependencies and Node.js
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
     curl \
     ffmpeg \
     ripgrep \
@@ -35,8 +36,15 @@ RUN cd scripts/whatsapp-bridge && \
     npm install
 
 # Install Hermes Agent globally from PyPI
-ARG HERMES_VERSION=0.15.2
+ARG HERMES_VERSION=0.17.0
 RUN pip install hermes-agent[all]==${HERMES_VERSION} honcho
+
+# Install Claude Code CLI
+ARG CLAUDE_CODE_VERSION=latest
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
+    && claude --version
+# Persist Claude Code config/settings under Hermes persistent storage
+ENV CLAUDE_CONFIG_DIR=/root/.hermes/claude
 
 # Transfer the built Node.js bridge to the global Python site-packages directory
 RUN cp -R /app/scripts /usr/local/lib/python3.11/site-packages/
