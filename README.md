@@ -4,13 +4,19 @@ This repository provides a configuration-only template for deploying a Hermes AI
 
 ## Infrastructure Requirements
 
-This guide focuses on a [Hetzner](https://www.hetzner.com/) cloud instance (specifically a CPX21 instance) as the reference deployment environment. However, the server infrastructure is flexible; Coolify and this Dockerfile are compatible with AWS, DigitalOcean, or any other modern VPS provider.
+Note: the server infrastructure is flexible; Coolify and this Dockerfile are compatible with Hetzner, AWS, DigitalOcean, or any other modern VPS provider.
+
+### Create a Hetzner instance
+
+Create a [Hetzner](https://www.hetzner.com/) cloud instance (CPX21) as from their website, then open the Hetzner Cloud Console. From there, create a new cloud project if needed, then start a new server instance.
+
+Use a basic Linux image such as Ubuntu 24.04 LTS. Select the CPX21 instance type, or the nearest available CPX plan with similar resources. For Coolify, choose a region close to where you expect to access or deploy from, add your SSH key.
+
+Typical monthly pricing depends heavily on region. As of mid-2026, CPX21 in the USA is listed around $37.49/month before VAT and IPv4 charges. Budget a little extra if you need IPv4, backups, snapshots, volumes, or other paid options.
 
 ### Optional: Swap Memory Configuration
 
-Allocating 2GB of swap memory is optional but highly recommended; it helps prevent out-of-memory crashes during the Docker build process.
-
-SSH into your server and run the following commands to create and enable a swap file:
+Allocating 2GB of swap memory is optional; it helps prevent out-of-memory crashes during the Docker build process. SSH into your server and run the following commands to create and enable a swap file:
 
 ```bash
 fallocate -l 2G /swapfile
@@ -29,7 +35,7 @@ Install Coolify on your fresh VPS. For comprehensive setup details, refer to the
    curl -fsSL [https://cdn.coollabs.io/coolify/install.sh](https://cdn.coollabs.io/coolify/install.sh) | bash
    ```
 2. Access the Coolify dashboard and create a new project.
-3. Configuration > Git Source > add `/marioizquierdo/hermes-coolify-deploy` (this repository)
+3. Configuration > Git Source > add this repository: `/marioizquierdo/hermes-coolify-deploy`
 4. Configuration > General > Build Pack = Docker
 
 ## Persistent Storage Configuration
@@ -53,6 +59,16 @@ TZ=America/Los_Angeles
 ```
 
 **Critical Port Configuration**: By default, Coolify isolates containers. To access the web dashboard, navigate to the "Configuration -> General" tab of your resource in Coolify and set the "Ports Exposes" field to `3005` (use same value as in the Dockerfile dashboard process).
+
+## Hermes Version
+
+The Dockerfile has a default ARG HERMES_VERSION value, but you can change it through a Coolify environment variable.
+
+```env
+HERMES_VERSION=0.17.0
+```
+
+Make sure to check "Available at Buildtime" (so the value is passed to the container). After updating and saving the Environment Variable, re-deploy with Force Deploy (without cache) to restart the Docker container and install the new hermes version.
 
 ## Agent Model Initialization
 
