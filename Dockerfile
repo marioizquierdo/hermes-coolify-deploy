@@ -26,9 +26,13 @@ ENV PATH="/root/.bun/bin:${PATH}"
 
 WORKDIR /app
 
+# ARGs can be override from Coolify's ENVIRONMENT variables (must set "Available at Buildtime")
+ARG HERMES_VERSION=0.17.0
+ARG CLAUDE_CODE_VERSION=latest
+
 # Clone ONLY the necessary frontend folders from the upstream repository
-RUN git clone --filter=blob:none --sparse https://github.com/NousResearch/hermes-agent.git . && \
-    git sparse-checkout set web scripts/whatsapp-bridge
+RUN git clone --filter=blob:none --sparse --branch ${HERMES_VERSION} https://github.com/NousResearch/hermes-agent.git . && \
+    git sparse-checkout set web scripts/whatsapp-bridge apps/shared
 
 # Build Hermes' Web Dashboard
 RUN cd web && \
@@ -40,13 +44,13 @@ RUN cd web && \
 RUN cd scripts/whatsapp-bridge && \
     npm install
 
-# Install Hermes Agent globally from PyPI
-# The version ARG can be modified from Coolify's ENVIRONMENT variable (must be "Available at Buildtime")
-ARG HERMES_VERSION=0.17.0
-RUN pip install hermes-agent[all]==${HERMES_VERSION} honcho
+# Install Hermes Agent (globally from PyPI)
+RUN pip install hermes-agent[all]==${HERMES_VERSION}
+
+# Install Honcho (needed to run multiple background services: gateway and dashboard).
+RUN pip install honcho
 
 # Install Claude Code CLI (so Hermes can delegate coding tasks to Claude Code)
-ARG CLAUDE_CODE_VERSION=latest
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     && claude --version
 # Persist Claude Code config/settings under Hermes persistent storage
@@ -64,5 +68,5 @@ RUN echo 'gateway: env PORT=3001 hermes gateway run' > /root/Procfile && \
 WORKDIR /root
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# Start the Procfile (gateway and dashboard process) with "honcho" (a Python tool to simplify multi-process execution).
+# Start the gateway and dashboard process from the Procfile
 CMD ["honcho", "start"]
