@@ -28,17 +28,18 @@ WORKDIR /app
 
 # ARGs can be override from Coolify's ENVIRONMENT variables (must set "Available at Buildtime")
 ARG HERMES_VERSION=0.17.0
+ARG HERMES_WEB_VERSION=v2026.7.7
 ARG CLAUDE_CODE_VERSION=latest
 
 # Clone ONLY the necessary frontend folders from the upstream repository
-RUN git clone --filter=blob:none --sparse --branch ${HERMES_VERSION} https://github.com/NousResearch/hermes-agent.git . && \
+RUN git clone --filter=blob:none --sparse --branch ${HERMES_WEB_VERSION} https://github.com/NousResearch/hermes-agent.git . && \
     git sparse-checkout set web scripts/whatsapp-bridge apps/shared
 
 # Build Hermes' Web Dashboard
-RUN cd web && \
-    npm install && \
+RUN npm install -w apps/shared -w web && \
+    cd web && \
     npm run build && \
-    rm -rf node_modules
+    rm -rf node_modules apps/shared/node_modules
 
 # Install WhatsApp Bridge dependencies (for Hermes' WhatsApp channel)
 RUN cd scripts/whatsapp-bridge && \
