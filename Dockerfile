@@ -28,18 +28,10 @@ WORKDIR /app
 
 # ARGs can be override from Coolify's ENVIRONMENT variables (must set "Available at Buildtime")
 ARG HERMES_VERSION=0.17.0
-ARG HERMES_WEB_VERSION=v2026.7.7
 ARG CLAUDE_CODE_VERSION=latest
 
-# Clone ONLY the necessary frontend folders from the upstream repository
-RUN git clone --filter=blob:none --sparse --branch ${HERMES_WEB_VERSION} https://github.com/NousResearch/hermes-agent.git . && \
-    git sparse-checkout set web scripts/whatsapp-bridge apps/shared
-
-# Build Hermes' Web Dashboard
-RUN npm install -w apps/shared -w web && \
-    cd web && \
-    npm run build && \
-    rm -rf node_modules apps/shared/node_modules
+# Copy the WhatsApp bridge (vendored in this repo)
+COPY scripts/whatsapp-bridge ./scripts/whatsapp-bridge
 
 # Install WhatsApp Bridge dependencies (for Hermes' WhatsApp channel)
 RUN cd scripts/whatsapp-bridge && \
@@ -57,17 +49,14 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
 # Persist Claude Code config/settings under Hermes persistent storage
 ENV CLAUDE_CONFIG_DIR=/root/.hermes/claude
 
-# Transfer the built Node.js bridge to the global Python site-packages directory.
-# Hermes works with Python, the bridge allows Hermes to call Node.js.
+# Transfer the WhatsApp bridge to the global Python site-packages directory.
 RUN cp -R /app/scripts /usr/local/lib/python3.11/site-packages/
 
-# Generate a "Procfile" to run the Hermes gateway and dashboard as separate processes.
-# It explicitly assigns different ports to avoid http collisions.
-RUN echo 'gateway: env PORT=3001 hermes gateway run' > /root/Procfile && \
-    echo 'dashboard: env PORT=3005 hermes dashboard --host 0.0.0.0 --port 3005 --no-open --insecure' >> /root/Procfile
+# Procfile to run the Hermes gateway as the background process.
+RUN echo 'gateway: env PORT=3001 hermes gateway run' > /root/Procfile
 
 WORKDIR /root
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# Start the gateway and dashboard process from the Procfile
+# Start the gateway process from the Procfile
 CMD ["honcho", "start"]
