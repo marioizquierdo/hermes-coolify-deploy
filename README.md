@@ -72,6 +72,18 @@ API_SERVER_HOST=0.0.0.0
 - `API_SERVER_KEY` authenticates clients. You can generate one with `openssl rand -hex 32`.
 - `API_SERVER_HOST=0.0.0.0` binds to all interfaces so other containers (Open WebUI) on the Coolify network can reach it. Default port is `8642` (override with `API_SERVER_PORT` if needed).
 
+**Full tool access for trusted web sessions:** the Hermes API server defaults to a restricted toolset (`hermes-api-server`), but if you want access to more tools like kanban and the terminal, you need to add it in `~/.hermes/config.yaml`.
+
+```yaml
+platform_toolsets:
+  api_server:
+    - hermes-api-server
+    - kanban
+    - terminal
+```
+
+Note: enabling `terminal` gives any session that reaches the API server full shell access to the server. Only do this if Open WebUI is password-protected and you trust everyone who can log in.
+
 ## Hermes Version
 
 The Dockerfile has a default `ARG HERMES_VERSION` value, but you can change it through a Coolify environment variable. Check what is the latest version here: https://github.com/NousResearch/hermes-agent/releases
@@ -127,7 +139,7 @@ Create a new Coolify application or service for Open WebUI from the official ima
 
 ```env
 OPENAI_API_BASE_URL=http://hermes:8642/v1
-OPENAI_API_KEY=your-super-secret-key-here   # must match Hermes's API_SERVER_KEY
+OPENAI_API_KEY=<your-super-secret-key-here>   # must match Hermes's API_SERVER_KEY
 ENABLE_OLLAMA_API=false
 ```
 
