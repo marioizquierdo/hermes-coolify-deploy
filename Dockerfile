@@ -38,7 +38,7 @@ RUN cd scripts/whatsapp-bridge && \
     npm install
 
 # Install Hermes Agent (globally from PyPI)
-RUN pip install hermes-agent[all]==${HERMES_VERSION}
+RUN pip install --retries 5 --retry-delay 10 --no-cache-dir hermes-agent[all]==${HERMES_VERSION}
 
 # Install Honcho (needed to run multiple background services: gateway and dashboard).
 RUN pip install honcho
